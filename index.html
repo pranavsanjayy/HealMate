@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heal Mate</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 0; }
+        .container { max-width: 400px; margin: 60px auto; background: #fff; padding: 32px 24px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        h2 { text-align: center; color: #2d6a4f; }
+        label { display: block; margin-top: 18px; margin-bottom: 6px; color: #333; }
+        input[type="text"], input[type="time"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        button { width: 100%; margin-top: 24px; padding: 12px; background: #2d6a4f; color: #fff; border: none; border-radius: 5px; font-size: 1rem; cursor: pointer; transition: background 0.2s; }
+        button:hover { background: #40916c; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Pill Reminder</h2>
+        <form action="http://127.0.0.1:5000/healMate/input" method="post">
+            <label for="pill">Pill Name</label>
+            <input type="text" id="pill" name="pill" required>
+
+            <label for="time">Time</label>
+            <input type="time" id="time" name="time" required>
+
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</body>
+</html>
+</head>
+</html>

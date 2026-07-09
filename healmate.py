@@ -1,82 +1,90 @@
 from flask import Flask, request, jsonify
-from datetime import datetime
+import uuid
+from flask_cors import CORS
 import json
 import os
 
 app = Flask(__name__)
-fileName="pills.json"
+CORS(app)
 
-# Fake DB (dictionary for now, can later use SQLite/MySQL)
-pill_schedule = {
-    "user1": {
-        "pill_name": "Paracetamol",
-        "schedule": ["08:00", "12:00", "18:00"],
-        "dose": 1
-    }
-}
-
-dispense_logs = []
-
-# API to get schedule
-@app.route('/getSchedule/<user>', methods=['GET'])
-def get_schedule(user):
-    if user in pill_schedule:
-        return jsonify(pill_schedule[user])
-    else:
-        return jsonify({"error": "User not found"}), 404
-
-# API to log dispense data
-@app.route('/logDispense', methods=['POST'])
-def log_dispense():
-    data = request.json
-    data["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    dispense_logs.append(data)
-    return jsonify({"message": "Log stored", "log": data})
-
-# API to view logs
-@app.route('/getLogs', methods=['GET'])
-def get_logs():
-    return jsonify(dispense_logs)
+fileName = "pills.json"
 
 
-
-
-# API to post pill data
+# API to add pill schedule
 @app.route('/healMate/input', methods=['POST'])
 def post_input():
-    pill=request.form.get('pill')
-    time=request.form.get('time')
 
-    data={"pill":pill,"time":time}
+    pill = request.form.get('pill')
+    time = request.form.get('time')
 
-    if os.path.exists(fileName) and os.path.getsize(fileName) > 0:
-        with open(fileName,"r") as f:
-            jsondata=json.load(f)
-        jsondata.append(data)
+    data = {
+        "pill": pill,
+        "time": time,
+        "id": str(uuid.uuid4())
+    }
 
-        with open(fileName,"w") as f:
-            json.dump(jsondata,f,indent=4)
-        return {"message": "data added", "pill": pill,"time": time}
-
+    # Load existing data safely
+    if os.path.exists(fileName):
+        with open(fileName, "r") as f:
+            try:
+                jsondata = json.load(f)
+            except:
+                jsondata = []
     else:
-        with open(fileName,"w") as f:
-            json.dump([data],f,indent=4)
-        return {"message": "data created", "pill": pill,"time": time}
-    
+        jsondata = []
 
-#API to fetch
+    jsondata.append(data)
+
+    with open(fileName, "w") as f:
+        json.dump(jsondata, f, indent=4)
+
+    return jsonify({
+        "message": "data added",
+        "pill": pill,
+        "time": time
+    })
+
+
+# API to fetch pill schedules
 @app.route('/healMate/fetch', methods=['GET'])
 def get_data():
-    if os.path.exists(fileName) and os.path.getsize(fileName) > 0:
-        with open(fileName,"r") as f:
-            jsondata=json.load(f)
-            return jsondata
-    else:
-        return {"message":"no data present"}
+
+    if os.path.exists(fileName):
+        with open(fileName, "r") as f:
+            try:
+                jsondata = json.load(f)
+            except:
+                jsondata = []
+
+        return jsonify(jsondata)
+
+    return jsonify({"message": "no data present"})
 
 
-            
+# API to delete pill schedule
+@app.route('/healMate/delete/<id>', methods=['DELETE'])
+def delete_data(id):
 
-    
+    if not os.path.exists(fileName):
+        return jsonify({"message": "no data present"})
+
+    with open(fileName, "r") as f:
+        try:
+            jsondata = json.load(f)
+        except:
+            jsondata = []
+
+    newdata = [item for item in jsondata if item["id"] != id]
+
+    with open(fileName, "w") as f:
+        json.dump(newdata, f, indent=4)
+
+    return jsonify({
+        "message": "data deleted",
+        "id": id
+    })
+
+
+# Run server
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
